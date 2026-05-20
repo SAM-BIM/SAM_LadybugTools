@@ -10,7 +10,7 @@
 	  <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
 	  <OutputPath>..\..\build\</OutputPath>
 <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
-<AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>	  <Deterministic>false</Deterministic>
+<AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
 	  <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
 	  
   </PropertyGroup>
