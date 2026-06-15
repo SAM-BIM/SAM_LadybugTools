@@ -29,6 +29,11 @@
     <OutputPath>..\..\build\</OutputPath>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Remove="Scripts\**" />
+    <EmbeddedResource Remove="Scripts\**" />
+    <None Remove="Scripts\**" />
+  </ItemGroup>
+  <ItemGroup>
     <Reference Include="SAM.Core, Version=1.0.7550.15820, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\..\SAM\build\SAM.Core.dll</HintPath>
@@ -47,9 +52,6 @@
     <Content Include="ToLadybug\Point3D_Temp.py" />
     <Content Include="ToLadybug\pointvector.py" />
     <Content Include="ToLadybug\Point3D.py" />
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Scripts\" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\SAM_LadybugTools\SAM_LadybugTools.Geometry\SAM.Geometry.LadybugTools.csproj" />

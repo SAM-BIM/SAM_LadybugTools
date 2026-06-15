@@ -30,6 +30,17 @@
     <OutputPath>..\..\build\</OutputPath>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Remove="Scripts\**" />
+    <Compile Remove="ToLadybug\**" />
+    <Compile Remove="ToSAM\**" />
+    <EmbeddedResource Remove="Scripts\**" />
+    <EmbeddedResource Remove="ToLadybug\**" />
+    <EmbeddedResource Remove="ToSAM\**" />
+    <None Remove="Scripts\**" />
+    <None Remove="ToLadybug\**" />
+    <None Remove="ToSAM\**" />
+  </ItemGroup>
+  <ItemGroup>
     <Reference Include="SAM.Analytical, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\..\SAM\build\SAM.Analytical.dll</HintPath>
@@ -47,11 +58,6 @@
     <Reference Include="SAM.Geometry">
       <HintPath>..\..\..\SAM\build\SAM.Geometry.dll</HintPath>
     </Reference>
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Scripts\" />
-    <Folder Include="ToLadybug\" />
-    <Folder Include="ToSAM\" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\SAM_LadybugTools\SAM_LadybugTools.Analytical\SAM.Analytical.LadybugTools.csproj" />
