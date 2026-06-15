@@ -8,6 +8,11 @@
 	  <RhinoDebugPluginsDir>$([MSBuild]::GetRegistryValueFromView('HKEY_CURRENT_USER\Software\McNeel\Rhinoceros\8.0-WIP-Developer-Debug-trunk\Install', 'Default Plug-ins Folder', null, RegistryView.Registry64))</RhinoDebugPluginsDir>
 	  <RhinoPluginsDir>$([MSBuild]::ValueOrDefault('$(RhinoDebugPluginsDir)', '$(RhinoDefaultPluginsDir)'))</RhinoPluginsDir>
 	  <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+	  <!-- Copy NuGet runtime assemblies (HoneybeeSchema, LBT.Newtonsoft.Json, ...) into the
+	       output. A Library project does not do this by default, so without it the plugin
+	       folder keeps stale hand-placed dependency DLLs (e.g. a 2020 HoneybeeSchema) that
+	       no longer match the compiled-against package version, causing runtime TypeLoad errors. -->
+	  <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
 	  <UseWindowsForms>true</UseWindowsForms>
     <ImportWindowsDesktopTargets>true</ImportWindowsDesktopTargets>
 	  <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>

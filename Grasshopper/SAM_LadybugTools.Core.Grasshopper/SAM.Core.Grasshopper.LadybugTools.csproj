@@ -8,6 +8,10 @@
 	  <RhinoDebugPluginsDir>$([MSBuild]::GetRegistryValueFromView('HKEY_CURRENT_USER\Software\McNeel\Rhinoceros\8.0-WIP-Developer-Debug-trunk\Install', 'Default Plug-ins Folder', null, RegistryView.Registry64))</RhinoDebugPluginsDir>
 	  <RhinoPluginsDir>$([MSBuild]::ValueOrDefault('$(RhinoDebugPluginsDir)', '$(RhinoDefaultPluginsDir)'))</RhinoPluginsDir>
 	  <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+	  <!-- Copy NuGet runtime assemblies (HoneybeeSchema, LBT.Newtonsoft.Json, ...) into the
+	       output so the deployed plugin folder gets the compiled-against package versions
+	       instead of stale hand-placed dependency DLLs (see Analytical.Grasshopper). -->
+	  <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
 	  <OutputPath>..\..\build\</OutputPath>
 <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
 <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
