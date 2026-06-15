@@ -24,6 +24,16 @@
   </PropertyGroup>
 
   <!--
+    Centralised Ladybug Tools package versions. HoneybeeSchema and Honeybee.UI are
+    pinned here once instead of in each project so they cannot drift. Honeybee.UI
+    1.50.x depends on HoneybeeSchema >= 2.6.0, so the two must move together.
+  -->
+  <PropertyGroup>
+    <HoneybeeSchemaVersion>2.6.0</HoneybeeSchemaVersion>
+    <HoneybeeUIVersion>1.50.1</HoneybeeUIVersion>
+  </PropertyGroup>
+
+  <!--
     Projects where SDK assembly-attribute generation is disabled (legacy AssemblyInfo.cs
     with GenerateAssemblyInfo=false) OR projects where the SDK doesn't auto-generate
     attributes at all (classic-style csprojs that don't set the property — '' evaluates

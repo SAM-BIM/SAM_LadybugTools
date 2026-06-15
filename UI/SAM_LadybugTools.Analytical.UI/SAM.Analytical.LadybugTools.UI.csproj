@@ -69,10 +69,10 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Honeybee.UI">
-      <Version>1.49.54</Version>
+      <Version>$(HoneybeeUIVersion)</Version>
     </PackageReference>
     <PackageReference Include="HoneybeeSchema">
-      <Version>1.5901.5</Version>
+      <Version>$(HoneybeeSchemaVersion)</Version>
     </PackageReference>
     <PackageReference Include="System.Text.Json">
       <Version>8.0.5</Version>

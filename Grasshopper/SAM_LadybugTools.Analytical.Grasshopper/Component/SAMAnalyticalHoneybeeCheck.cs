@@ -1,4 +1,6 @@
-﻿using Grasshopper.Kernel;
+﻿// SPDX-License-Identifier: LGPL-3.0-or-later
+// Copyright (c) 2020-2026 Michal Dengusiak & Jakub Ziolkowski and contributors
+using Grasshopper.Kernel;
 using SAM.Analytical.Grasshopper.LadybugTools.Properties;
 using SAM.Core;
 using SAM.Core.Grasshopper;
@@ -68,11 +70,12 @@ namespace SAM.Analytical.LadybugTools
                 HoneybeeSchema.IDdBaseModel iDdBaseModel = HoneybeeSchema.IDdBaseModel.FromJson(json);
                 log = Create.Log(iDdBaseModel as dynamic);
             }
-            catch
+            catch (Exception exception)
             {
-                dataAccess.SetData(0, null);
-                dataAccess.SetData(1, null);
-                return;
+                // Previously this silently nulled both outputs, hiding schema-mismatch /
+                // deserialisation failures. Surface the cause in the Log instead.
+                log = new Log();
+                log.Add("Could not read the Honeybee object: {0}", LogRecordType.Error, exception.Message);
             }
 
             if (log == null)
