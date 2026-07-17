@@ -1,14 +1,18 @@
-﻿using Grasshopper.Kernel;
+// SPDX-License-Identifier: LGPL-3.0-or-later
+// Copyright (c) 2020–2026 Michal Dengusiak & Jakub Ziolkowski and contributors
+
+using Grasshopper.Kernel;
 using Grasshopper.Kernel.Types;
 using HoneybeeSchema;
 using SAM.Analytical.Grasshopper.LadybugTools.Properties;
 using SAM.Core;
 using SAM.Core.Grasshopper;
 using System;
+using System.Collections.Generic;
 
 namespace SAM.Analytical.Grasshopper.LadybugTools
 {
-    public class HoneybeeSAMAnalytical : GH_SAMComponent
+    public class HoneybeeSAMAnalytical : GH_SAMVariableOutputParameterComponent
     {
         /// <summary>
         /// Gets the unique ID for this component. Do not change this ID after release.
@@ -18,7 +22,7 @@ namespace SAM.Analytical.Grasshopper.LadybugTools
         /// <summary>
         /// The latest version of this component
         /// </summary>
-        public override string LatestComponentVersion => "1.0.0";
+        public override string LatestComponentVersion => "1.0.1";
 
         /// <summary>
         /// Provides an Icon for the component.
@@ -38,18 +42,28 @@ namespace SAM.Analytical.Grasshopper.LadybugTools
         /// <summary>
         /// Registers all the input parameters for this component.
         /// </summary>
-        protected override void RegisterInputParams(GH_InputParamManager inputParamManager)
+        protected override GH_SAMParam[] Inputs
         {
-            inputParamManager.AddGenericParameter("_honeybee", "_honeybee", "SAM Honeybee Object", GH_ParamAccess.item);
+            get
+            {
+                List<GH_SAMParam> result = new List<GH_SAMParam>();
+                result.Add(new GH_SAMParam(new global::Grasshopper.Kernel.Parameters.Param_GenericObject() { Name = "_honeybee", NickName = "_honeybee", Description = "SAM Honeybee Object", Access = GH_ParamAccess.item }, ParamVisibility.Binding));
+                return result.ToArray();
+            }
         }
 
         /// <summary>
         /// Registers all the output parameters for this component.
         /// </summary>
-        protected override void RegisterOutputParams(GH_OutputParamManager outputParamManager)
+        protected override GH_SAMParam[] Outputs
         {
-            outputParamManager.AddGenericParameter("analytical", "analytical", "SAM Analytical", GH_ParamAccess.item);
-            outputParamManager.AddTextParameter("json", "json", "Honeybee Json", GH_ParamAccess.item);
+            get
+            {
+                List<GH_SAMParam> result = new List<GH_SAMParam>();
+                result.Add(new GH_SAMParam(new global::Grasshopper.Kernel.Parameters.Param_GenericObject() { Name = "analytical", NickName = "analytical", Description = "SAM Analytical", Access = GH_ParamAccess.item }, ParamVisibility.Binding));
+                result.Add(new GH_SAMParam(new global::Grasshopper.Kernel.Parameters.Param_String() { Name = "json", NickName = "json", Description = "Honeybee Json", Access = GH_ParamAccess.item }, ParamVisibility.Binding));
+                return result.ToArray();
+            }
         }
 
         /// <summary>
@@ -60,7 +74,8 @@ namespace SAM.Analytical.Grasshopper.LadybugTools
         {
             GH_ObjectWrapper objectWrapper = null;
 
-            if (!dataAccess.GetData(0, ref objectWrapper) || objectWrapper == null)
+            int index = Params.IndexOfInputParam("_honeybee");
+            if (index == -1 || !dataAccess.GetData(index, ref objectWrapper) || objectWrapper == null)
             {
                 AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "Invalid data");
                 return;
@@ -108,8 +123,17 @@ namespace SAM.Analytical.Grasshopper.LadybugTools
                 }
             }
 
-            dataAccess.SetData(0, result);
-            dataAccess.SetData(1, json);
+            index = Params.IndexOfOutputParam("analytical");
+            if (index != -1)
+            {
+                dataAccess.SetData(index, result);
+            }
+
+            index = Params.IndexOfOutputParam("json");
+            if (index != -1)
+            {
+                dataAccess.SetData(index, json);
+            }
         }
     }
 }
