@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
 // Copyright (c) 2020-2026 Michal Dengusiak & Jakub Ziolkowski and contributors
 using SAM.Core;
+using System.Linq;
 using Xunit;
 
 namespace SAM.Core.LadybugTools.Tests
@@ -208,6 +209,56 @@ namespace SAM.Core.LadybugTools.Tests
             var jsonDocument = System.Text.Json.JsonDocument.Parse(json);
             HoneybeeSchema.IDdBaseModel result2 = Convert.ToHoneybee(jsonDocument);
             Assert.NotNull(result2);
+        }
+
+        [Fact]
+        public static void ToHoneybee_ValidTypeButInvalidBody_ShouldReturnNullAndLogError()
+        {
+            // Valid "type" ("Room") but structurally invalid body for HoneybeeSchema 2.6.0:
+            // the "faces" array contains a plain string instead of a Face object.
+            // This exercises the try/catch around the FromJson switch block.
+            string json = @"{
+  ""type"": ""Room"",
+  ""identifier"": ""BrokenRoom"",
+  ""display_name"": ""Broken Room"",
+  ""faces"": [""this-is-not-a-face-object""],
+  ""properties"": { ""type"": ""RoomPropertiesAbridged"", ""energy"": { ""type"": ""RoomEnergyPropertiesAbridged"" } }
+}";
+
+            HoneybeeSchema.IDdBaseModel result = Convert.ToHoneybee(json, out Log log);
+
+            Assert.Null(result);
+            Assert.NotNull(log);
+            Assert.NotEmpty(log);
+            Assert.Contains(log, x => x.LogRecordType == LogRecordType.Error);
+
+            // Verify the log message identifies the Honeybee object type
+            string combinedText = string.Join(" ", log.Select(x => x.Text));
+            Assert.Contains("Room", combinedText);
+        }
+
+        [Fact]
+        public static void ToHoneybee_ValidTypeButInvalidBody_Face_ShouldReturnNullAndLogError()
+        {
+            // Valid "type" ("Face") but the geometry boundary is missing entirely.
+            string json = @"{
+  ""type"": ""Face"",
+  ""identifier"": ""BrokenFace"",
+  ""display_name"": ""Broken Face"",
+  ""face_type"": ""Wall"",
+  ""boundary_condition"": { ""type"": ""Outdoors"" },
+  ""properties"": { ""type"": ""FacePropertiesAbridged"", ""energy"": { ""type"": ""FaceEnergyPropertiesAbridged"" } }
+}";
+
+            HoneybeeSchema.IDdBaseModel result = Convert.ToHoneybee(json, out Log log);
+
+            Assert.Null(result);
+            Assert.NotNull(log);
+            Assert.NotEmpty(log);
+            Assert.Contains(log, x => x.LogRecordType == LogRecordType.Error);
+
+            string combinedText = string.Join(" ", log.Select(x => x.Text));
+            Assert.Contains("Face", combinedText);
         }
     }
 }
