@@ -99,11 +99,23 @@ namespace SAM.Core.LadybugTools
 
                 case "Model":
                     return Model.FromJson(json);
+
+                case "Face":
+                    return Face.FromJson(json);
+
+                case "Aperture":
+                    return Aperture.FromJson(json);
+
+                case "Door":
+                    return Door.FromJson(json);
+
+                case "Shade":
+                    return Shade.FromJson(json);
             }
 
             // Previously this threw NotImplementedException, which surfaced as an opaque crash.
             // Return null with a clear, diagnosable message instead.
-            log.Add("Honeybee object type '{0}' is not supported for conversion (only 'Room' and 'Model' are handled).", LogRecordType.Warning, type);
+            log.Add("Honeybee object type '{0}' is not supported for conversion (only 'Room', 'Model', 'Face', 'Aperture', 'Door', and 'Shade' are handled).", LogRecordType.Warning, type);
             return null;
         }
     }
