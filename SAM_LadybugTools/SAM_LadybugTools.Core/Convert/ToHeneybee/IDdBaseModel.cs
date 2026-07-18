@@ -92,25 +92,33 @@ namespace SAM.Core.LadybugTools
                 return null;
             }
 
-            switch (type)
+            try
             {
-                case "Room":
-                    return Room.FromJson(json);
+                switch (type)
+                {
+                    case "Room":
+                        return Room.FromJson(json);
 
-                case "Model":
-                    return Model.FromJson(json);
+                    case "Model":
+                        return Model.FromJson(json);
 
-                case "Face":
-                    return Face.FromJson(json);
+                    case "Face":
+                        return Face.FromJson(json);
 
-                case "Aperture":
-                    return Aperture.FromJson(json);
+                    case "Aperture":
+                        return Aperture.FromJson(json);
 
-                case "Door":
-                    return Door.FromJson(json);
+                    case "Door":
+                        return Door.FromJson(json);
 
-                case "Shade":
-                    return Shade.FromJson(json);
+                    case "Shade":
+                        return Shade.FromJson(json);
+                }
+            }
+            catch (System.Exception exception)
+            {
+                log.Add("Could not deserialise Honeybee '{0}': {1}", LogRecordType.Error, type, exception.Message);
+                return null;
             }
 
             // Previously this threw NotImplementedException, which surfaced as an opaque crash.
