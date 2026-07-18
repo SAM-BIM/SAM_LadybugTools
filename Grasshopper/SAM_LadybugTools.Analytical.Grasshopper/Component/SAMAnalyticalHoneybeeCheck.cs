@@ -64,25 +64,61 @@ namespace SAM.Analytical.LadybugTools
             if (!dataAccess.GetData(0, ref json))
                 return;
 
-            Log log = null;
-            try
+            Log log = new Log();
+
+            if (string.IsNullOrWhiteSpace(json))
             {
-                HoneybeeSchema.IDdBaseModel iDdBaseModel = HoneybeeSchema.IDdBaseModel.FromJson(json);
-                log = Create.Log(iDdBaseModel as dynamic);
-            }
-            catch (Exception exception)
-            {
-                // Previously this silently nulled both outputs, hiding schema-mismatch /
-                // deserialisation failures. Surface the cause in the Log instead.
-                log = new Log();
-                log.Add("Could not read the Honeybee object: {0}", LogRecordType.Error, exception.Message);
+                log.Add("Input JSON is null or empty.", LogRecordType.Error);
+                dataAccess.SetData(0, log.Filter(new LogRecordType[] { LogRecordType.Error, LogRecordType.Warning, LogRecordType.Undefined }));
+                dataAccess.SetData(1, log.Filter(new LogRecordType[] { LogRecordType.Message }));
+                return;
             }
 
-            if (log == null)
-                log = new Log();
+            // Use the same validated conversion/deserialisation path as the rest of the
+            // library rather than maintaining inconsistent parsing behaviour.
+            HoneybeeSchema.IDdBaseModel iDdBaseModel = Core.LadybugTools.Convert.ToHoneybee(json, out Log parseLog);
+            if (parseLog != null)
+                Core.Modify.AddRange(log, parseLog);
+
+            if (iDdBaseModel != null)
+            {
+                // Log assembly identity details for diagnostics
+                log.Add("HoneybeeSchema assembly version: {0}", LogRecordType.Message, Core.LadybugTools.Query.HoneybeeSchemaVersion());
+
+                try
+                {
+                    string assemblyPath = typeof(HoneybeeSchema.IDdBaseModel).Assembly.Location;
+                    if (!string.IsNullOrWhiteSpace(assemblyPath))
+                        log.Add("Loaded from: {0}", LogRecordType.Message, assemblyPath);
+                }
+                catch { }
+
+                // Log type information from the deserialised object
+                log.Add("Honeybee object type: {0}", LogRecordType.Message, iDdBaseModel.GetType().Name);
+
+                // Run the existing validation logic (identifier checks, etc.)
+                Log validationLog = null;
+                if (iDdBaseModel is HoneybeeSchema.Model model)
+                    validationLog = SAM.Core.LadybugTools.Create.Log(model);
+                else if (iDdBaseModel is HoneybeeSchema.Room room)
+                    validationLog = SAM.Core.LadybugTools.Create.Log(room);
+                else if (iDdBaseModel is HoneybeeSchema.Face face)
+                    validationLog = SAM.Core.LadybugTools.Create.Log(face);
+                else if (iDdBaseModel is HoneybeeSchema.Aperture aperture)
+                    validationLog = SAM.Core.LadybugTools.Create.Log(aperture);
+                else if (iDdBaseModel is HoneybeeSchema.Door door)
+                    validationLog = SAM.Core.LadybugTools.Create.Log(door);
+                else if (iDdBaseModel is HoneybeeSchema.Shade shade)
+                    validationLog = SAM.Core.LadybugTools.Create.Log(shade);
+                else
+                    validationLog = SAM.Core.LadybugTools.Create.Log((HoneybeeSchema.IIDdBase)iDdBaseModel);
+
+                if (validationLog != null)
+                    Core.Modify.AddRange(log, validationLog);
+            }
 
             if (log.Count() == 0)
-                log.Add("All good! You can switch off your computer and go home now.");
+                log.Add("All good! You can switch off your computer and go home now.", LogRecordType.Message);
 
             dataAccess.SetData(0, log.Filter(new LogRecordType[] { LogRecordType.Error, LogRecordType.Warning, LogRecordType.Undefined }));
             dataAccess.SetData(1, log.Filter(new LogRecordType[] { LogRecordType.Message }));
