@@ -117,10 +117,13 @@ namespace SAM.Analytical.LadybugTools
                     Core.Modify.AddRange(log, validationLog);
             }
 
-            if (log.Count() == 0)
+            // The diagnostic Messages above mean the log is never empty on a successful run,
+            // so gate the success message on the absence of problem records, not on Count().
+            Log log_Problems = log.Filter(new LogRecordType[] { LogRecordType.Error, LogRecordType.Warning, LogRecordType.Undefined });
+            if (log_Problems.Count() == 0)
                 log.Add("All good! You can switch off your computer and go home now.", LogRecordType.Message);
 
-            dataAccess.SetData(0, log.Filter(new LogRecordType[] { LogRecordType.Error, LogRecordType.Warning, LogRecordType.Undefined }));
+            dataAccess.SetData(0, log_Problems);
             dataAccess.SetData(1, log.Filter(new LogRecordType[] { LogRecordType.Message }));
         }
     }
