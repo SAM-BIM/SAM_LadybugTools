@@ -132,5 +132,45 @@ namespace SAM.Core.LadybugTools.Tests
             Assert.NotNull(materials);
             Assert.Empty(materials);
         }
+
+        [Fact]
+        public static void ProductionModel_FrameMaterialRecoveredWhenHoneybeePrunesUnreferencedMaterials()
+        {
+            // Honeybee drops materials not referenced by any construction when a model passes
+            // through the Ladybug Python round trip. The base SAM frame material is unreferenced
+            // (frame layers live in user_data), so only the derived EnergyWindowFrame survives.
+            const string frameName = "C00_Frame Notional building_7800kg/m3_0.176W/mK";
+
+            AnalyticalModel original = LoadProductionModel();
+            HoneybeeSchema.Model model = SAM.Analytical.LadybugTools.Convert.ToLadybugTools(original);
+
+            // Simulate the Honeybee-side pruning of unreferenced materials at JSON level
+            JsonObject jsonObject = (JsonObject)JsonNode.Parse(model.ToJson());
+            JsonArray materials = (JsonArray)jsonObject["properties"]?["energy"]?["materials"];
+            Assert.NotNull(materials);
+
+            int count_Before = materials.Count;
+            for (int i = materials.Count - 1; i >= 0; i--)
+            {
+                if (materials[i]?["identifier"]?.GetValue<string>() == frameName)
+                {
+                    materials.RemoveAt(i);
+                }
+            }
+            Assert.True(materials.Count < count_Before);
+
+            HoneybeeSchema.IDdBaseModel ddBaseModel = Convert.ToHoneybee(jsonObject.ToJsonString(), out Log _);
+            Assert.NotNull(ddBaseModel);
+            Assert.DoesNotContain(((HoneybeeSchema.Model)ddBaseModel).Properties.Energy.MaterialList, x => x?.Identifier == frameName);
+
+            AnalyticalModel result = Assert.IsType<AnalyticalModel>(SAM.Analytical.LadybugTools.Convert.ToSAM((HoneybeeSchema.Model)ddBaseModel));
+
+            ApertureConstruction apertureConstruction = result.AdjacencyCluster?.GetApertureConstructions()?.Find(x => x.Name == "SIM_EXT_GLZ");
+            Assert.NotNull(apertureConstruction);
+            Assert.Contains(apertureConstruction.FrameConstructionLayers, x => x.Name == frameName);
+
+            OpaqueMaterial frameMaterial = Assert.IsType<OpaqueMaterial>(result.MaterialLibrary?.GetMaterial(frameName));
+            Assert.False(double.IsNaN(frameMaterial.ThermalConductivity));
+        }
     }
 }
