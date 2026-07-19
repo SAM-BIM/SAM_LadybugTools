@@ -82,37 +82,80 @@ namespace SAM.Analytical.LadybugTools
             if (index == -1 || !dataAccess.GetData(index, ref json))
                 return;
 
-            Log log = null;
-            try
+            Log log = new Log();
+
+            if (string.IsNullOrWhiteSpace(json))
             {
-                HoneybeeSchema.IDdBaseModel iDdBaseModel = HoneybeeSchema.IDdBaseModel.FromJson(json);
-                log = Create.Log(iDdBaseModel as dynamic);
-            }
-            catch
-            {
-                int logIndex = Params.IndexOfOutputParam("Log");
-                if (logIndex != -1)
+                log.Add("Input JSON is null or empty.", LogRecordType.Error);
+
+                index = Params.IndexOfOutputParam("Log");
+                if (index != -1)
                 {
-                    dataAccess.SetData(logIndex, null);
+                    dataAccess.SetData(index, log.Filter(new LogRecordType[] { LogRecordType.Error, LogRecordType.Warning, LogRecordType.Undefined }));
                 }
-                int messagesIndex = Params.IndexOfOutputParam("Messages");
-                if (messagesIndex != -1)
+
+                index = Params.IndexOfOutputParam("Messages");
+                if (index != -1)
                 {
-                    dataAccess.SetData(messagesIndex, null);
+                    dataAccess.SetData(index, log.Filter(new LogRecordType[] { LogRecordType.Message }));
                 }
+
                 return;
             }
 
-            if (log == null)
-                log = new Log();
+            // Use the same validated conversion/deserialisation path as the rest of the
+            // library rather than maintaining inconsistent parsing behaviour.
+            HoneybeeSchema.IDdBaseModel iDdBaseModel = Core.LadybugTools.Convert.ToHoneybee(json, out Log parseLog);
+            if (parseLog != null)
+                Core.Modify.AddRange(log, parseLog);
 
-            if (log.Count() == 0)
-                log.Add("All good! You can switch off your computer and go home now.");
+            if (iDdBaseModel != null)
+            {
+                // Log assembly identity details for diagnostics
+                log.Add("HoneybeeSchema assembly version: {0}", LogRecordType.Message, Core.LadybugTools.Query.HoneybeeSchemaVersion());
+
+                try
+                {
+                    string assemblyPath = typeof(HoneybeeSchema.IDdBaseModel).Assembly.Location;
+                    if (!string.IsNullOrWhiteSpace(assemblyPath))
+                        log.Add("Loaded from: {0}", LogRecordType.Message, assemblyPath);
+                }
+                catch { }
+
+                // Log type information from the deserialised object
+                log.Add("Honeybee object type: {0}", LogRecordType.Message, iDdBaseModel.GetType().Name);
+
+                // Run the existing validation logic (identifier checks, etc.)
+                Log validationLog = null;
+                if (iDdBaseModel is HoneybeeSchema.Model model)
+                    validationLog = SAM.Core.LadybugTools.Create.Log(model);
+                else if (iDdBaseModel is HoneybeeSchema.Room room)
+                    validationLog = SAM.Core.LadybugTools.Create.Log(room);
+                else if (iDdBaseModel is HoneybeeSchema.Face face)
+                    validationLog = SAM.Core.LadybugTools.Create.Log(face);
+                else if (iDdBaseModel is HoneybeeSchema.Aperture aperture)
+                    validationLog = SAM.Core.LadybugTools.Create.Log(aperture);
+                else if (iDdBaseModel is HoneybeeSchema.Door door)
+                    validationLog = SAM.Core.LadybugTools.Create.Log(door);
+                else if (iDdBaseModel is HoneybeeSchema.Shade shade)
+                    validationLog = SAM.Core.LadybugTools.Create.Log(shade);
+                else
+                    validationLog = SAM.Core.LadybugTools.Create.Log((HoneybeeSchema.IIDdBase)iDdBaseModel);
+
+                if (validationLog != null)
+                    Core.Modify.AddRange(log, validationLog);
+            }
+
+            // The diagnostic Messages above mean the log is never empty on a successful run,
+            // so gate the success message on the absence of problem records, not on Count().
+            Log log_Problems = log.Filter(new LogRecordType[] { LogRecordType.Error, LogRecordType.Warning, LogRecordType.Undefined });
+            if (log_Problems.Count() == 0)
+                log.Add("All good! You can switch off your computer and go home now.", LogRecordType.Message);
 
             index = Params.IndexOfOutputParam("Log");
             if (index != -1)
             {
-                dataAccess.SetData(index, log.Filter(new LogRecordType[] { LogRecordType.Error, LogRecordType.Warning, LogRecordType.Undefined }));
+                dataAccess.SetData(index, log_Problems);
             }
 
             index = Params.IndexOfOutputParam("Messages");

@@ -101,26 +101,64 @@ namespace SAM.Analytical.Grasshopper.LadybugTools
             {
                 json  = Core.LadybugTools.Convert.ToString(value);
             }
-            catch
+            catch (Exception exception)
             {
-
+                AddRuntimeMessage(GH_RuntimeMessageLevel.Error, string.Format("Failed to serialise Honeybee object to JSON ({0}): {1}", value.GetType().FullName, exception.Message));
             }
 
-            if(!string.IsNullOrWhiteSpace(json))
+            if(string.IsNullOrWhiteSpace(json))
+            {
+                AddRuntimeMessage(GH_RuntimeMessageLevel.Error, string.Format("Could not serialise the input object to Honeybee JSON (input type: {0}).", value.GetType().FullName));
+            }
+            else
             {
                 try
                 {
-                    IDdBaseModel ddBaseModel = Core.LadybugTools.Convert.ToHoneybee(value);
+                    IDdBaseModel ddBaseModel = Core.LadybugTools.Convert.ToHoneybee(value, out Log log);
 
-                    if (ddBaseModel != null)
+                    if (log != null)
                     {
-                        result = Analytical.LadybugTools.Convert.ToSAM(ddBaseModel);
+                        foreach (LogRecord logRecord in log)
+                        {
+                            if (logRecord == null || string.IsNullOrWhiteSpace(logRecord.Text))
+                            {
+                                continue;
+                            }
+
+                            AddRuntimeMessage(logRecord.LogRecordType == LogRecordType.Error ? GH_RuntimeMessageLevel.Error : GH_RuntimeMessageLevel.Warning, logRecord.Text);
+                        }
+                    }
+
+                    if (ddBaseModel == null)
+                    {
+                        AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "Honeybee JSON could not be deserialised to a Honeybee object.");
+                    }
+                    else
+                    {
+                        try
+                        {
+                            result = Analytical.LadybugTools.Convert.ToSAM(ddBaseModel);
+                        }
+                        catch (Exception exception)
+                        {
+                            AddRuntimeMessage(GH_RuntimeMessageLevel.Error, string.Format("ToSAM failed ({0}): {1}", ddBaseModel.GetType().Name, exception));
+                        }
+
+                        if (result == null)
+                        {
+                            AddRuntimeMessage(GH_RuntimeMessageLevel.Error, string.Format("SAM conversion of Honeybee '{0}' returned null.", ddBaseModel.GetType().Name));
+                        }
                     }
                 }
-                catch
+                catch (Exception exception)
                 {
-
+                    AddRuntimeMessage(GH_RuntimeMessageLevel.Error, string.Format("Honeybee deserialisation failed: {0}", exception));
                 }
+            }
+
+            if (result == null)
+            {
+                AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "Conversion produced no SAM AnalyticalModel.");
             }
 
             index = Params.IndexOfOutputParam("analytical");
