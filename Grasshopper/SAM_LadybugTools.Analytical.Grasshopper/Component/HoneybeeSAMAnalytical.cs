@@ -101,26 +101,44 @@ namespace SAM.Analytical.Grasshopper.LadybugTools
             {
                 json  = Core.LadybugTools.Convert.ToString(value);
             }
-            catch
+            catch (Exception exception)
             {
-
+                AddRuntimeMessage(GH_RuntimeMessageLevel.Error, string.Format("Failed to serialise Honeybee object to JSON: {0}", exception.Message));
             }
 
             if(!string.IsNullOrWhiteSpace(json))
             {
                 try
                 {
-                    IDdBaseModel ddBaseModel = Core.LadybugTools.Convert.ToHoneybee(value);
+                    IDdBaseModel ddBaseModel = Core.LadybugTools.Convert.ToHoneybee(value, out Log log);
+
+                    if (log != null)
+                    {
+                        foreach (LogRecord logRecord in log)
+                        {
+                            if (logRecord == null || string.IsNullOrWhiteSpace(logRecord.Text))
+                            {
+                                continue;
+                            }
+
+                            AddRuntimeMessage(logRecord.LogRecordType == LogRecordType.Error ? GH_RuntimeMessageLevel.Error : GH_RuntimeMessageLevel.Warning, logRecord.Text);
+                        }
+                    }
 
                     if (ddBaseModel != null)
                     {
                         result = Analytical.LadybugTools.Convert.ToSAM(ddBaseModel);
                     }
                 }
-                catch
+                catch (Exception exception)
                 {
-
+                    AddRuntimeMessage(GH_RuntimeMessageLevel.Error, string.Format("Honeybee to SAM conversion failed: {0}", exception.Message));
                 }
+            }
+
+            if (result == null)
+            {
+                AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "Conversion produced no SAM AnalyticalModel.");
             }
 
             index = Params.IndexOfOutputParam("analytical");

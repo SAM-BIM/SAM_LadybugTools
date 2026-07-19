@@ -48,6 +48,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Include="Fixtures\original_v1.sam">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\SAM_LadybugTools\SAM_LadybugTools.Core\SAM.Core.LadybugTools.csproj" />
     <ProjectReference Include="..\SAM_LadybugTools\SAM_LadybugTools.Geometry\SAM.Geometry.LadybugTools.csproj" />
     <ProjectReference Include="..\SAM_LadybugTools\SAM_LadybugTools.Analytical\SAM.Analytical.LadybugTools.csproj" />

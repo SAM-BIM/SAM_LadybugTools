@@ -351,15 +351,69 @@ namespace SAM.Analytical.LadybugTools
 
             if (Query.TryGetSAMGuid(model, out Guid modelGuid) && modelGuid != result.Guid)
             {
-                System.Text.Json.Nodes.JsonObject jsonObject = result.ToJsonObject();
-                if (jsonObject != null)
+                // AnalyticalModel exposes no safe (Guid, AnalyticalModel) constructor, so the
+                // model-level GUID can currently only be restored via a full JSON round trip.
+                // That reconstruction can fail on real production payloads; never let GUID
+                // preservation destroy an otherwise valid converted model.
+                AnalyticalModel result_Restored = TryRestoreGuid(result, modelGuid);
+                if (result_Restored != null)
                 {
-                    jsonObject["Guid"] = modelGuid.ToString();
-                    result = new AnalyticalModel(jsonObject);
+                    result = result_Restored;
                 }
             }
 
             return result;
+        }
+
+        /// <summary>
+        /// Attempts to rebuild <paramref name="analyticalModel"/> with the preserved model-level
+        /// <paramref name="guid"/> via a JSON round trip. Returns null when serialisation or
+        /// reconstruction fails or produces an invalid model, in which case the caller must keep
+        /// the original (valid) instance and accept that the model-level GUID is not restored.
+        /// </summary>
+        private static AnalyticalModel TryRestoreGuid(AnalyticalModel analyticalModel, Guid guid)
+        {
+            if (analyticalModel == null || guid == Guid.Empty)
+            {
+                return null;
+            }
+
+            try
+            {
+                System.Text.Json.Nodes.JsonObject jsonObject = analyticalModel.ToJsonObject();
+                if (jsonObject == null)
+                {
+                    return null;
+                }
+
+                jsonObject["Guid"] = guid.ToString();
+
+                AnalyticalModel result = new AnalyticalModel(jsonObject);
+                if (result == null || result.Guid != guid)
+                {
+                    return null;
+                }
+
+                // Validate the reconstruction preserved the model content
+                AdjacencyCluster adjacencyCluster_Original = analyticalModel.AdjacencyCluster;
+                AdjacencyCluster adjacencyCluster_Restored = result.AdjacencyCluster;
+                if (adjacencyCluster_Restored == null)
+                {
+                    return null;
+                }
+
+                if ((adjacencyCluster_Original?.GetPanels()?.Count ?? 0) != (adjacencyCluster_Restored.GetPanels()?.Count ?? 0)
+                    || (adjacencyCluster_Original?.GetSpaces()?.Count ?? 0) != (adjacencyCluster_Restored.GetSpaces()?.Count ?? 0))
+                {
+                    return null;
+                }
+
+                return result;
+            }
+            catch
+            {
+                return null;
+            }
         }
     }
 }

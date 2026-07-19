@@ -6,15 +6,15 @@ namespace SAM.Analytical.LadybugTools
     {
         public static Core.IMaterial ToSAM(this HoneybeeSchema.Energy.IMaterial material)
         {
-            if(material == null)
+            if (material == null)
             {
-            if(material is EnergyWindowFrame)
+                return null;
+            }
+
+            if (material is EnergyWindowFrame)
             {
                 return ((EnergyWindowFrame)material).ToSAM();
             }
-
-            return null;
-        }
 
             if(material is EnergyWindowMaterialGlazing)
             {
