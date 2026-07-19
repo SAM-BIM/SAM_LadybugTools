@@ -135,7 +135,14 @@ namespace SAM.Analytical.Grasshopper.LadybugTools
                     }
                     else
                     {
-                        result = Analytical.LadybugTools.Convert.ToSAM(ddBaseModel);
+                        try
+                        {
+                            result = Analytical.LadybugTools.Convert.ToSAM(ddBaseModel);
+                        }
+                        catch (Exception exception)
+                        {
+                            AddRuntimeMessage(GH_RuntimeMessageLevel.Error, string.Format("ToSAM failed ({0}): {1}", ddBaseModel.GetType().Name, exception));
+                        }
 
                         if (result == null)
                         {
@@ -145,7 +152,7 @@ namespace SAM.Analytical.Grasshopper.LadybugTools
                 }
                 catch (Exception exception)
                 {
-                    AddRuntimeMessage(GH_RuntimeMessageLevel.Error, string.Format("Honeybee to SAM conversion failed: {0}", exception.Message));
+                    AddRuntimeMessage(GH_RuntimeMessageLevel.Error, string.Format("Honeybee deserialisation failed: {0}", exception));
                 }
             }
 
