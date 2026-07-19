@@ -8,8 +8,13 @@ namespace SAM.Analytical.LadybugTools
         {
             if(material == null)
             {
-                return null;
+            if(material is EnergyWindowFrame)
+            {
+                return ((EnergyWindowFrame)material).ToSAM();
             }
+
+            return null;
+        }
 
             if(material is EnergyWindowMaterialGlazing)
             {
@@ -24,7 +29,19 @@ namespace SAM.Analytical.LadybugTools
             if (material is EnergyMaterial)
             {
                 EnergyMaterial energyMaterial = material as EnergyMaterial;
-                if(energyMaterial.Density < 5)
+
+                // SAM round-trip metadata always wins over the legacy density heuristic
+                if (Query.TryGetSAMMaterialType(energyMaterial, out Core.MaterialType materialType) && materialType != Core.MaterialType.Undefined)
+                {
+                    if (materialType == Core.MaterialType.Gas)
+                    {
+                        return energyMaterial.ToSAM_GasMaterial();
+                    }
+
+                    return energyMaterial.ToSAM();
+                }
+
+                if (energyMaterial.Density < 5)
                 {
                     return ((EnergyMaterial)material).ToSAM_GasMaterial();
                 }
@@ -37,6 +54,13 @@ namespace SAM.Analytical.LadybugTools
             if(material is EnergyMaterialNoMass)
             {
                 EnergyMaterialNoMass energyMaterialNoMass = (EnergyMaterialNoMass)material;
+
+                // SAM air gaps travel as EnergyMaterialNoMass; restore them as gas when marked
+                if (Query.TryGetSAMMaterialType(energyMaterialNoMass, out Core.MaterialType materialType) && materialType == Core.MaterialType.Gas)
+                {
+                    return energyMaterialNoMass.ToSAM_GasMaterial();
+                }
+
                 return energyMaterialNoMass.ToSAM();
             }
 

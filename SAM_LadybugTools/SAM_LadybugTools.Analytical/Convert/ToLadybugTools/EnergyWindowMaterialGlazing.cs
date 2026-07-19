@@ -10,7 +10,7 @@ namespace SAM.Analytical.LadybugTools
             if (transparentMaterial == null || string.IsNullOrEmpty(transparentMaterial.Name))
                 return null;
 
-            return new EnergyWindowMaterialGlazing(
+            EnergyWindowMaterialGlazing result = new EnergyWindowMaterialGlazing(
                 identifier: transparentMaterial.Name,
                 displayName: transparentMaterial.DisplayName,
                 userData: null,
@@ -27,6 +27,10 @@ namespace SAM.Analytical.LadybugTools
                 conductivity: transparentMaterial.ThermalConductivity,
                 dirtCorrection: 1,
                 solarDiffusing: false);
+
+            result.SetUserData(transparentMaterial);
+
+            return result;
         }
     }
 }

@@ -38,6 +38,27 @@ namespace SAM.Analytical.LadybugTools
                 false
                 );
 
+            // Restore SAM-specific values preserved in namespaced user_data
+            if (Core.LadybugTools.Query.TryGetUserData(energyWindowMaterialGlazing, Core.LadybugTools.UserDataKeys.VapourDiffusionFactor, out double value))
+            {
+                result.SetValue(MaterialParameter.VapourDiffusionFactor, value);
+            }
+
+            if (Core.LadybugTools.Query.TryGetUserData(energyWindowMaterialGlazing, Core.LadybugTools.UserDataKeys.DefaultThickness, out value))
+            {
+                result.SetValue(Core.MaterialParameter.DefaultThickness, value);
+            }
+
+            if (Core.LadybugTools.Query.TryGetUserData(energyWindowMaterialGlazing, Core.LadybugTools.UserDataKeys.IsBlind, out bool isBlind))
+            {
+                result.SetValue(TransparentMaterialParameter.IsBlind, isBlind);
+            }
+
+            if (Query.TryGetSAMGuid(energyWindowMaterialGlazing, out System.Guid guid))
+            {
+                result = new Core.TransparentMaterial(result.Name, guid, result, result.DisplayName, result.Description);
+            }
+
             return result;
         }
     }
