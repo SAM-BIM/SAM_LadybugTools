@@ -69,7 +69,7 @@ namespace SAM.Analytical.LadybugTools
 
         public static Core.IMaterial ToSAM(AnyOf<EnergyMaterial, EnergyMaterialNoMass, EnergyWindowMaterialGlazing, EnergyWindowMaterialGas> material)
         {
-            if(material.Obj is HoneybeeSchema.Energy.IMaterial)
+            if(material?.Obj is HoneybeeSchema.Energy.IMaterial)
             {
                 return ToSAM((HoneybeeSchema.Energy.IMaterial)material.Obj);
             }

@@ -47,6 +47,11 @@ namespace SAM.Analytical.LadybugTools
             List<IMaterial> result = new List<IMaterial>();
             foreach (ConstructionLayer constructionLayer in constructionLayers)
             {
+                if (constructionLayer == null || string.IsNullOrWhiteSpace(constructionLayer.Name))
+                {
+                    continue;
+                }
+
                 if (materialLibrary.GetMaterial(constructionLayer.Name) != null)
                 {
                     continue;

@@ -2,6 +2,7 @@
 // Copyright (c) 2020-2026 Michal Dengusiak & Jakub Ziolkowski and contributors
 using SAM.Analytical;
 using SAM.Core;
+using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Text.Json.Nodes;
@@ -101,6 +102,35 @@ namespace SAM.Core.LadybugTools.Tests
             Assert.Equal("Test Frame", opaqueMaterial.Name);
             Assert.Equal(0.15, opaqueMaterial.ThermalConductivity, 9);
             Assert.Equal(0.05, opaqueMaterial.GetValue<double>(MaterialParameter.DefaultThickness), 9);
+        }
+
+        [Fact]
+        public static void NullAnyOfMaterial_ToSAM_ReturnsNullWithoutThrowing()
+        {
+            // Regression: Query.DefaultMaterial returns a null AnyOf for unknown material names
+            // and Convert.ToSAM(AnyOf) dereferenced it, throwing NullReferenceException deep
+            // inside Modify.AddDefaultMaterials during model conversion.
+            HoneybeeSchema.AnyOf<HoneybeeSchema.EnergyMaterial, HoneybeeSchema.EnergyMaterialNoMass, HoneybeeSchema.EnergyWindowMaterialGlazing, HoneybeeSchema.EnergyWindowMaterialGas> material = null;
+
+            Assert.Null(SAM.Analytical.LadybugTools.Convert.ToSAM(material));
+        }
+
+        [Fact]
+        public static void AddDefaultMaterials_UnknownLayerName_DoesNotThrow()
+        {
+            // A layer name missing from both the library and the Honeybee default set must be
+            // skipped silently, matching the runtime production-model failure.
+            MaterialLibrary materialLibrary = new MaterialLibrary("Test");
+            List<ConstructionLayer> constructionLayers = new List<ConstructionLayer>
+            {
+                new ConstructionLayer("T00_Unknown Material Not In Defaults", 0.1),
+                null,
+            };
+
+            List<IMaterial> materials = SAM.Analytical.LadybugTools.Modify.AddDefaultMaterials(materialLibrary, constructionLayers);
+
+            Assert.NotNull(materials);
+            Assert.Empty(materials);
         }
     }
 }
