@@ -95,8 +95,9 @@ namespace SAM.Analytical.LadybugTools
 
         /// <summary>
         /// Converts a Honeybee frame material to a SAM opaque material so window frames remain
-        /// representable: conductivity = conductance * width, thickness = width. Density and
-        /// specific heat stay undefined because HoneybeeSchema does not carry them.
+        /// representable: conductivity = conductance * width, thickness = width. Density, specific
+        /// heat and the remaining SAM properties are restored from namespaced user_data written by
+        /// ToLadybugTools_EnergyWindowFrame, because HoneybeeSchema does not carry them natively.
         /// </summary>
         public static Core.OpaqueMaterial ToSAM(this EnergyWindowFrame energyWindowFrame)
         {
@@ -111,8 +112,43 @@ namespace SAM.Analytical.LadybugTools
                 thermalConductivity = energyWindowFrame.Conductance * energyWindowFrame.Width;
             }
 
-            Core.OpaqueMaterial result = new Core.OpaqueMaterial(energyWindowFrame.Identifier, null, energyWindowFrame.DisplayName, null, thermalConductivity, double.NaN, double.NaN);
+            double value = double.NaN;
+
+            Core.LadybugTools.Query.TryGetUserData(energyWindowFrame, Core.LadybugTools.UserDataKeys.Density, out double density);
+            Core.LadybugTools.Query.TryGetUserData(energyWindowFrame, Core.LadybugTools.UserDataKeys.SpecificHeatCapacity, out double specificHeatCapacity);
+
+            Core.OpaqueMaterial result = new Core.OpaqueMaterial(energyWindowFrame.Identifier, null, energyWindowFrame.DisplayName, null, thermalConductivity, specificHeatCapacity, density);
             result.SetValue(Core.MaterialParameter.DefaultThickness, energyWindowFrame.Width);
+
+            if (Core.LadybugTools.Query.TryGetUserData(energyWindowFrame, Core.LadybugTools.UserDataKeys.VapourDiffusionFactor, out value))
+            {
+                result.SetValue(MaterialParameter.VapourDiffusionFactor, value);
+            }
+
+            if (Core.LadybugTools.Query.TryGetUserData(energyWindowFrame, Core.LadybugTools.UserDataKeys.IgnoreThermalTransmittanceCalculations, out bool ignore))
+            {
+                result.SetValue(OpaqueMaterialParameter.IgnoreThermalTransmittanceCalculations, ignore);
+            }
+
+            if (Core.LadybugTools.Query.TryGetUserData(energyWindowFrame, Core.LadybugTools.UserDataKeys.InternalEmissivity, out value))
+            {
+                result.SetValue(OpaqueMaterialParameter.InternalEmissivity, value);
+            }
+
+            if (Core.LadybugTools.Query.TryGetUserData(energyWindowFrame, Core.LadybugTools.UserDataKeys.InternalSolarReflectance, out value))
+            {
+                result.SetValue(OpaqueMaterialParameter.InternalSolarReflectance, value);
+            }
+
+            if (Core.LadybugTools.Query.TryGetUserData(energyWindowFrame, Core.LadybugTools.UserDataKeys.InternalLightReflectance, out value))
+            {
+                result.SetValue(OpaqueMaterialParameter.InternalLightReflectance, value);
+            }
+
+            if (Query.TryGetSAMGuid(energyWindowFrame, out System.Guid guid))
+            {
+                result = new Core.OpaqueMaterial(result.Name, guid, result, result.DisplayName, result.Description);
+            }
 
             return result;
         }

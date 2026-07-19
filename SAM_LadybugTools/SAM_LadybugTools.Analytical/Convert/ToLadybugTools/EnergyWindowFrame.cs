@@ -46,7 +46,35 @@ namespace SAM.Analytical.LadybugTools
                 return null;
             }
 
-            return new EnergyWindowFrame(identifier: identifier, width: constructionLayer.Thickness, conductance: conductance);
+            EnergyWindowFrame result = new EnergyWindowFrame(identifier: identifier, width: constructionLayer.Thickness, conductance: conductance);
+
+            // EnergyWindowFrame carries only width and conductance; preserve the remaining SAM
+            // material data in user_data so it survives when Honeybee prunes the unreferenced
+            // base material from the model material list
+            if (material is OpaqueMaterial opaqueMaterial)
+            {
+                result.SetUserData(opaqueMaterial);
+            }
+
+            if (material is Material material_Base)
+            {
+                if (!double.IsNaN(material_Base.Density))
+                {
+                    Core.LadybugTools.Modify.SetUserData(result, Core.LadybugTools.UserDataKeys.Density, material_Base.Density);
+                }
+
+                if (!double.IsNaN(material_Base.SpecificHeatCapacity))
+                {
+                    Core.LadybugTools.Modify.SetUserData(result, Core.LadybugTools.UserDataKeys.SpecificHeatCapacity, material_Base.SpecificHeatCapacity);
+                }
+
+                if (!double.IsNaN(material_Base.ThermalConductivity))
+                {
+                    Core.LadybugTools.Modify.SetUserData(result, Core.LadybugTools.UserDataKeys.ThermalConductivity, material_Base.ThermalConductivity);
+                }
+            }
+
+            return result;
         }
     }
 }

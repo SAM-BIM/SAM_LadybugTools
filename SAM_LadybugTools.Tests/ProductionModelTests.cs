@@ -170,7 +170,11 @@ namespace SAM.Core.LadybugTools.Tests
             Assert.Contains(apertureConstruction.FrameConstructionLayers, x => x.Name == frameName);
 
             OpaqueMaterial frameMaterial = Assert.IsType<OpaqueMaterial>(result.MaterialLibrary?.GetMaterial(frameName));
-            Assert.False(double.IsNaN(frameMaterial.ThermalConductivity));
+
+            OpaqueMaterial frameMaterial_Original = Assert.IsType<OpaqueMaterial>(original.MaterialLibrary?.GetMaterial(frameName));
+            Assert.Equal(frameMaterial_Original.ThermalConductivity, frameMaterial.ThermalConductivity, 9);
+            Assert.Equal(frameMaterial_Original.Density, frameMaterial.Density, 9);
+            Assert.Equal(frameMaterial_Original.SpecificHeatCapacity, frameMaterial.SpecificHeatCapacity, 9);
         }
     }
 }
