@@ -39,6 +39,25 @@ namespace SAM.Core.LadybugTools.Tests
         }
 
         [Fact]
+        public static void ToHoneybee_ValidJson_ShouldNotLogProblemRecords()
+        {
+            // The HoneybeeCheck Grasshopper component reports "All good!" only when the
+            // combined log contains no Error/Warning/Undefined records. Pin that a valid
+            // conversion emits none of those, so informational additions to the conversion
+            // path cannot silently break the component's success signal.
+            foreach (string json in new[] { SampleJson.ModelWithOneRoom(), SampleJson.RoomWithOneFace() })
+            {
+                HoneybeeSchema.IDdBaseModel result = Convert.ToHoneybee(json, out Log log);
+
+                Assert.NotNull(result);
+                Assert.NotNull(log);
+                Assert.DoesNotContain(log, x => x.LogRecordType == LogRecordType.Error
+                    || x.LogRecordType == LogRecordType.Warning
+                    || x.LogRecordType == LogRecordType.Undefined);
+            }
+        }
+
+        [Fact]
         public static void ToHoneybee_MissingType_ShouldReturnNullAndLogError()
         {
             string json = @"{""identifier"":""test""}";
