@@ -79,6 +79,25 @@ namespace SAM.Core.LadybugTools
         }
 
         /// <summary>
+        /// Double-typed read following the SAM convention for unset numeric values: when the
+        /// key is missing or not convertible the out value is double.NaN rather than
+        /// default(double), because 0 is a legitimate physical quantity while NaN marks
+        /// "undefined". Callers rely on this (via double.IsNaN fallbacks) when importing
+        /// Honeybee models not authored by SAM, which carry no namespaced user_data.
+        /// </summary>
+        public static bool TryGetUserData(this IIDdBaseModel dDBaseModel, string key, out double value)
+        {
+            if (TryGetUserData<double>(dDBaseModel, key, out double value_Temp))
+            {
+                value = value_Temp;
+                return true;
+            }
+
+            value = double.NaN;
+            return false;
+        }
+
+        /// <summary>
         /// Converts LBT.Newtonsoft.Json LINQ tokens into plain .NET objects so callers do
         /// not depend on the JSON representation of user_data.
         /// </summary>
