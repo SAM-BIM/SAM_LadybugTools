@@ -1,4 +1,4 @@
-﻿using HoneybeeSchema;
+using HoneybeeSchema;
 using SAM.Core;
 using System;
 using System.Collections.Generic;
@@ -200,7 +200,164 @@ namespace SAM.Analytical.LadybugTools
                 }
             }
 
+            // Remove materials that are not referenced by the constructions and aperture
+            // constructions actually used by the converted model (for example unreferenced
+            // Honeybee defaults from the model or global construction set)
+            if (materialLibrary != null)
+            {
+                HashSet<string> materialNames = new HashSet<string>();
+
+                List<Construction> constructions_AdjacencyCluster = adjacencyCluster?.GetConstructions();
+                if (constructions_AdjacencyCluster != null)
+                {
+                    foreach (Construction construction in constructions_AdjacencyCluster)
+                    {
+                        construction?.ConstructionLayers?.ForEach(x => { if (x != null && !string.IsNullOrWhiteSpace(x.Name)) materialNames.Add(x.Name); });
+                    }
+                }
+
+                List<ApertureConstruction> apertureConstructions_AdjacencyCluster = adjacencyCluster?.GetApertureConstructions();
+                if (apertureConstructions_AdjacencyCluster != null)
+                {
+                    foreach (ApertureConstruction apertureConstruction in apertureConstructions_AdjacencyCluster)
+                    {
+                        apertureConstruction?.PaneConstructionLayers?.ForEach(x => { if (x != null && !string.IsNullOrWhiteSpace(x.Name)) materialNames.Add(x.Name); });
+                        apertureConstruction?.FrameConstructionLayers?.ForEach(x => { if (x != null && !string.IsNullOrWhiteSpace(x.Name)) materialNames.Add(x.Name); });
+                    }
+                }
+
+                List<IMaterial> materials = materialLibrary.GetMaterials();
+                if (materials != null)
+                {
+                    foreach (IMaterial material in materials)
+                    {
+                        if (material == null || string.IsNullOrWhiteSpace(material.Name))
+                        {
+                            continue;
+                        }
+
+                        if (!materialNames.Contains(material.Name))
+                        {
+                            materialLibrary.Remove(material);
+                        }
+                    }
+                }
+            }
+
+            // Remove profiles that are not referenced by any assigned InternalCondition
+            // (for example Honeybee default program type schedules)
+            if (profileLibrary != null)
+            {
+                HashSet<string> profileNames = new HashSet<string>();
+
+                List<Space> spaces = adjacencyCluster?.GetSpaces();
+                if (spaces != null)
+                {
+                    foreach (Space space in spaces)
+                    {
+                        InternalCondition internalCondition = space?.InternalCondition;
+                        if (internalCondition == null)
+                        {
+                            continue;
+                        }
+
+                        List<ParameterSet> parameterSets = internalCondition.GetParameterSets();
+                        if (parameterSets == null)
+                        {
+                            continue;
+                        }
+
+                        foreach (ParameterSet parameterSet in parameterSets)
+                        {
+                            if (parameterSet?.Names == null)
+                            {
+                                continue;
+                            }
+
+                            foreach (string parameterName in parameterSet.Names)
+                            {
+                                if (parameterName == null || !parameterName.EndsWith("Profile Name"))
+                                {
+                                    continue;
+                                }
+
+                                if (parameterSet.ToObject(parameterName) is string profileName && !string.IsNullOrWhiteSpace(profileName))
+                                {
+                                    profileNames.Add(profileName);
+                                }
+                            }
+                        }
+                    }
+                }
+
+                List<Profile> profiles = profileLibrary.GetProfiles();
+                if (profiles != null)
+                {
+                    foreach (Profile profile in profiles)
+                    {
+                        if (profile == null || string.IsNullOrWhiteSpace(profile.Name))
+                        {
+                            continue;
+                        }
+
+                        if (!profileNames.Contains(profile.Name))
+                        {
+                            profileLibrary.Remove(profile);
+                        }
+                    }
+                }
+            }
+
             AnalyticalModel result = new AnalyticalModel(model.DisplayName, null, null, null, adjacencyCluster, materialLibrary, profileLibrary);
+
+            // Restore SAM model identity and metadata preserved in namespaced user_data
+            if (Core.LadybugTools.Query.TryGetUserData(model, Core.LadybugTools.UserDataKeys.Name, out string name) && !string.IsNullOrWhiteSpace(name))
+            {
+                result = new AnalyticalModel(name, result.Description, result.Location, result.Address, result.AdjacencyCluster, result.MaterialLibrary, result.ProfileLibrary);
+            }
+
+            if (Core.LadybugTools.Query.TryGetUserData(model, Core.LadybugTools.UserDataKeys.Description, out string description))
+            {
+                result = new AnalyticalModel(result.Name, description, result.Location, result.Address, result.AdjacencyCluster, result.MaterialLibrary, result.ProfileLibrary);
+            }
+
+            if (Core.LadybugTools.Query.TryGetUserData(model, Core.LadybugTools.UserDataKeys.LocationLatitude, out double latitude)
+                && Core.LadybugTools.Query.TryGetUserData(model, Core.LadybugTools.UserDataKeys.LocationLongitude, out double longitude))
+            {
+                Core.LadybugTools.Query.TryGetUserData(model, Core.LadybugTools.UserDataKeys.LocationName, out string locationName);
+                Core.LadybugTools.Query.TryGetUserData(model, Core.LadybugTools.UserDataKeys.LocationElevation, out double elevation);
+
+                Core.Location location = new Core.Location(locationName, longitude, latitude, double.IsNaN(elevation) ? 0 : elevation);
+                result = new AnalyticalModel(result, location);
+            }
+
+            if (Core.LadybugTools.Query.TryGetUserData(model, Core.LadybugTools.UserDataKeys.ProfileLibraryName, out string profileLibraryName) && !string.IsNullOrWhiteSpace(profileLibraryName))
+            {
+                ProfileLibrary profileLibrary_Temp = result.ProfileLibrary;
+                if (profileLibrary_Temp == null)
+                {
+                    profileLibrary_Temp = new ProfileLibrary(profileLibraryName);
+                }
+                else if (string.IsNullOrWhiteSpace(profileLibrary_Temp.Name))
+                {
+                    profileLibrary_Temp = new ProfileLibrary(profileLibraryName, profileLibrary_Temp.GetProfiles());
+                }
+
+                if (profileLibrary_Temp != result.ProfileLibrary)
+                {
+                    result = new AnalyticalModel(result, result.AdjacencyCluster, result.MaterialLibrary, profileLibrary_Temp);
+                }
+            }
+
+            if (Query.TryGetSAMGuid(model, out Guid modelGuid) && modelGuid != result.Guid)
+            {
+                System.Text.Json.Nodes.JsonObject jsonObject = result.ToJsonObject();
+                if (jsonObject != null)
+                {
+                    jsonObject["Guid"] = modelGuid.ToString();
+                    result = new AnalyticalModel(jsonObject);
+                }
+            }
 
             return result;
         }

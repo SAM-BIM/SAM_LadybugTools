@@ -96,6 +96,11 @@ namespace SAM.Analytical.LadybugTools
                 result.InternalCondition = internalCondition;
             }
 
+            if (Query.TryGetSAMGuid(room, out System.Guid guid))
+            {
+                result = new Space(guid, result);
+            }
+
             return result;
         }
     }

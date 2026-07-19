@@ -35,6 +35,19 @@ namespace SAM.Analytical.LadybugTools
                 }
             }
 
+            // SAM round-trip metadata carries the original construction name
+            if (construction == null && constructions != null && Core.LadybugTools.Query.TryGetUserData(face, Core.LadybugTools.UserDataKeys.ConstructionName, out string constructionName) && !string.IsNullOrWhiteSpace(constructionName))
+            {
+                foreach (Construction construction_Temp in constructions)
+                {
+                    if (construction_Temp != null && construction_Temp.Name == constructionName)
+                    {
+                        construction = construction_Temp;
+                        break;
+                    }
+                }
+            }
+
             bool adiabatic = false;
 
             AnyOf<Ground, Outdoors, Adiabatic, Surface, OtherSideTemperature> boundaryCondition = face.BoundaryCondition;
@@ -186,6 +199,11 @@ namespace SAM.Analytical.LadybugTools
                         panel.AddAperture(aperture);
                     }
                 }
+            }
+
+            if (Query.TryGetSAMGuid(face, out System.Guid guid))
+            {
+                panel = Create.Panel(guid, panel);
             }
 
             return panel;

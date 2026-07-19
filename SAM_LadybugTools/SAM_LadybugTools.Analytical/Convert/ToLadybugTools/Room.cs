@@ -1,4 +1,4 @@
-﻿using HoneybeeSchema;
+using HoneybeeSchema;
 using System.Collections.Generic;
 
 namespace SAM.Analytical.LadybugTools
@@ -56,6 +56,8 @@ namespace SAM.Analytical.LadybugTools
             RoomPropertiesAbridged roomPropertiesAbridged = new RoomPropertiesAbridged();
 
             Room result = new Room(uniqueName, faces, roomPropertiesAbridged, space.Name);
+
+            Core.LadybugTools.Modify.SetUserData(result, Core.LadybugTools.UserDataKeys.Guid, space.Guid.ToString());
 
             InternalCondition internalCondition = space.InternalCondition;
             if(internalCondition != null)

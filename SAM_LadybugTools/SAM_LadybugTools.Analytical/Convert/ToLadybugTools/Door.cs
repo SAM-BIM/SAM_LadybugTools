@@ -1,4 +1,4 @@
-﻿using HoneybeeSchema;
+using HoneybeeSchema;
 using SAM.Core;
 using System.Collections.Generic;
 
@@ -51,6 +51,10 @@ namespace SAM.Analytical.LadybugTools
                 displayName: aperture.Name);
 
             door.IsGlass = materialType == MaterialType.Transparent;
+
+            Core.LadybugTools.Modify.SetUserData(door, Core.LadybugTools.UserDataKeys.Guid, aperture.Guid.ToString());
+            Core.LadybugTools.Modify.SetUserData(door, Core.LadybugTools.UserDataKeys.ConstructionName, apertureConstruction.Name);
+
             return door;
         }
     }
