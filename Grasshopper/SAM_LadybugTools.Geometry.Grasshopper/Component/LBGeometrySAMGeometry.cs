@@ -192,7 +192,7 @@ namespace SAM.Geometry.Grasshopper.LadybugTools
             {
                 //You can add image files to your project resources and access them like this:
                 // return Resources.IconForThisComponent;
-                return Resources.SAM_Honeybee;
+                return Resources.SAM_GH_GeometryImport;
             }
         }
 
