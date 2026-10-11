@@ -1,5 +1,13 @@
 # Project Progress - SAM_LadybugTools (2026-Q4)
 
+## Q4 Grasshopper icon migration closeout — 2026-10-11
+
+- SAM-BIM/SAM_LadybugTools#13 merged as `9b674bc08cb44e7a00e8f26660809f19360c6105`, reviewed head `fb51c50e47c85ebfbd20c8773dd57bf435ac77ba`. Merge commit; branches preserved. Approved frozen icon design applied to 7 concrete objects; GUIDs/APIs/namespaces/behaviour preserved.
+- Resolved the missing Honeybee library through dependency-supported `settings.txt` `LBTRootFolder` pointing to a workspace-local library, with official default energy/radiance standards. No converter/test expectation, system installation or ACL change. Portable reproduction instructions committed in `documentation/Icon-Migration-Validation-2026-10-11.md`; local runtime files must be provisioned on another machine.
+- Files: Grasshopper icon getters/resources/design kit, validation record. Full unchanged suite **66 passed / 0 failed / 0 skipped**; full Release solution build PASS. Fresh guards: 7 icon-token swaps, 0 unrelated production C# changes, 7 resource references, 0 errors; both icon-bearing assemblies pass embedded PNG verification. No fresh Rhino-hosted smoke claimed.
+- Final-head pull-request build/SPDX runs `38140105177` / `38140105217` and dispatch build/SPDX `38140103175` / `38140104817` all PASS before merge. No approval/security rule bypass.
+- Remaining: none for this icon PR. Next: owner visual review in installed host; no installer/submodule repin included. This docs-only Q4 `[skip ci]` closeout follows the known merge SHA.
+
 ## Branch
 
 `sow/2026-Q4` - bootstrapped 2026-10-06 from `master` `abf0d215`. Frozen Q3 record: `sow/2026-Q3` @ `25953987` (not modified).
