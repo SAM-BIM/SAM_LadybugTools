@@ -1,5 +1,14 @@
 # Project Progress - SAM_LadybugTools (2026-Q4)
 
+## Q4 agent instructions rollout closeout - 2026-10-12
+
+- SAM-BIM/SAM_LadybugTools#14 merged as `d6223ed2b5e60f46cd1949d3ee88f4a6802394b2` (merge commit pinned to approved head `addae8aa9fe27443d4b02ee6a5aa2489e98a1d15`; base `sow/2026-Q4` `223ef21f406f633b1b2c60f512eace658e003b00`; validated content `e54fae4f33413e3190d433ef3172d999e3e98da8`). Owner-authorized 2026-10-12 after an independent review (`AGENT_ROLLOUT_REVIEW_2026-10-12.md`, local to the owner's workspace, not committed).
+- Docs only: AGENTS.md, CLAUDE.md, plus the rollout record `documentation/Agent-Continuity-Rollout-Q4.md`. No product code, build, workflow, dependency pin or tool changed; this closeout is the only `PROJECT_PROGRESS.md` change.
+- Validation: local documentation checks and commands are in `documentation/Agent-Continuity-Rollout-Q4.md` (`git diff --check`, file scope, UTF-8/LF/no BOM, import). Hosted checks at the approved head: build success (run 38257963692); spdx success (run 38257963633). Dependency selection: dependency clones in the build log: SAM @ sow/2026-Q4.
+- Cleanup: remote docs/agent-instructions-rollout-q4 deleted with an expected-SHA lease on addae8aa9fe27443d4b02ee6a5aa2489e98a1d15 after confirming it is contained in sow/2026-Q4 and no open PR uses it as head or base; the local branch and its worktree are preserved (worktree in use). Other branches, worktrees and the frozen quarters were not touched.
+- Remaining gaps: no agent-client behaviour or token benchmark has been run.
+- Exact next step: Continue from the shared `AGENTS.md`. Open item carried from the pilots: verify on each installed agent client, in a fresh Q4 session, that it follows the instructions without loading the full progress history, and record the result.
+
 ## Q4 Grasshopper icon migration closeout — 2026-10-11
 
 - SAM-BIM/SAM_LadybugTools#13 merged as `9b674bc08cb44e7a00e8f26660809f19360c6105`, reviewed head `fb51c50e47c85ebfbd20c8773dd57bf435ac77ba`. Merge commit; branches preserved. Approved frozen icon design applied to 7 concrete objects; GUIDs/APIs/namespaces/behaviour preserved.
